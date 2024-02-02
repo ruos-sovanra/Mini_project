@@ -59,8 +59,8 @@ public class Theater_Booking {
         System.out.println("For single seat booking you have to input Seat-1.");
         System.out.println("For multi seat booking you have to input Seat-1,Seat-2");
         System.out.println("==========================================================");
-        System.out.print("Enter the seat numbers : ");
-        String seatInput = input.next();
+        String seatInput= input.next();
+
         String[] seatNumbers = seatInput.split(",");
         System.out.print("Enter the booking ID: ");
         String id = input.next();
