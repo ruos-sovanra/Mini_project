@@ -3,10 +3,11 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 public class Theater_Booking {
-    private static String[] lastBookingIDs = new String[0];
-    private static int[] lastBookingSessions = new int[0];
-    private static String[][] lastBookingSeats = new String[0][0];
-    private static int bookingCount = 0;
+    static final int MAX_BOOKINGS = 100;
+    static String[] lastBookingIDs = new String[MAX_BOOKINGS];
+    static int[] lastBookingSessions = new int[MAX_BOOKINGS];
+    static String[][] lastBookingSeats = new String[MAX_BOOKINGS][];
+    static int bookingCount = 0;
     public static void PressToShowFunction(){
         Scanner input = new Scanner(System.in);
         System.out.println("Press Enter to show Function.");
@@ -59,7 +60,20 @@ public class Theater_Booking {
         System.out.println("For single seat booking you have to input Seat-1.");
         System.out.println("For multi seat booking you have to input Seat-1,Seat-2");
         System.out.println("==========================================================");
-        String seatInput= input.next();
+        String seatInput;
+        do {
+            System.out.print("Please Enter The Seat Number : ");
+            seatInput = input.next();
+            if(seatInput.matches("^(Seat-\\d+(,Seat-\\d+)*)?$")){
+                validInput = true;
+            }else {
+                System.out.println("====================<Booking Instruction>================");
+                System.out.println("For single seat booking you have to input Seat-1.");
+                System.out.println("For multi seat booking you have to input Seat-1,Seat-2");
+                System.out.println("==========================================================");
+                validInput = false;
+            }
+        }while (!validInput);
 
         String[] seatNumbers = seatInput.split(",");
         System.out.print("Enter the booking ID: ");
@@ -67,6 +81,7 @@ public class Theater_Booking {
         System.out.print("Are you sure you want to book these seats? (y/n): ");
         String confirmation = input.next();
         if ("y".equalsIgnoreCase(confirmation)) {
+            StringBuilder seatBuilder = new StringBuilder();
             for (String seatNumber : seatNumbers) {
                 int seat = Integer.parseInt(seatNumber.trim().substring(5)); // Extract the seat number from the input
                 int row = (seat - 1) / selectedSession[0].length;
@@ -75,20 +90,24 @@ public class Theater_Booking {
                     if (selectedSession[row][col].equals("AL")) {
                         selectedSession[row][col] = "BO"; // Assuming "B" represents a booked seat
                         System.out.println("Seat successfully booked with ID " + id + " in the " + (session == 1 ? "morning" : session == 2 ? "afternoon" : "evening") + " session!");
-                        lastBookingIDs = Arrays.copyOf(lastBookingIDs, bookingCount + 1);
-                        lastBookingSessions = Arrays.copyOf(lastBookingSessions, bookingCount + 1);
-                        lastBookingSeats = Arrays.copyOf(lastBookingSeats, bookingCount + 1);
-                        lastBookingIDs[bookingCount] = id;
-                        lastBookingSessions[bookingCount] = session;
-                        // Concatenate the seat numbers into a single string
-                        lastBookingSeats[bookingCount] = new String[]{String.join(",", seatNumbers)};
-                        bookingCount++;
+                        seatBuilder.append(seat).append(",");
                     } else {
                         System.out.println("This seat is already booked in the " + (session == 1 ? "morning" : session == 2 ? "afternoon" : "evening") + " session.");
                     }
                 } else {
                     System.out.println("Invalid seat number for the " + (session == 1 ? "morning" : session == 2 ? "afternoon" : "evening") + " session.");
                 }
+            }
+            // Only add a new booking if at least one seat was successfully booked
+            if (seatBuilder.length() > 0) {
+                lastBookingIDs = Arrays.copyOf(lastBookingIDs, bookingCount + 1);
+                lastBookingSessions = Arrays.copyOf(lastBookingSessions, bookingCount + 1);
+                lastBookingSeats = Arrays.copyOf(lastBookingSeats, bookingCount + 1);
+                lastBookingIDs[bookingCount] = id;
+                lastBookingSessions[bookingCount] = session;
+                // Remove trailing comma and concatenate the seat numbers into a single string
+                lastBookingSeats[bookingCount] = new String[]{seatBuilder.deleteCharAt(seatBuilder.length() - 1).toString()};
+                bookingCount++;
             }
         } else {
             System.out.println("Booking cancelled.");
@@ -116,11 +135,11 @@ public class Theater_Booking {
             String formattedDate = LocalDate.now().format(formatter);
 
             System.out.println("Session\t\tID\t\tSeat\t\t\tDate");
-            // Only print the first booking
-            if (bookingCount > 0) {
-                String session = lastBookingSessions[0] == 1 ? "morning" : lastBookingSessions[0] == 2 ? "afternoon" : "evening";
-                String seats = Arrays.toString(lastBookingSeats[0]).replaceAll("\\[|\\]", "").replace(", ", ",");
-                System.out.println(String.format("%-10s%-10s%-15s%s", session, lastBookingIDs[0], seats, formattedDate));
+
+            for (int i = 0; i < bookingCount; i++) {
+                String session = lastBookingSessions[i] == 1 ? "morning" : lastBookingSessions[i] == 2 ? "afternoon" : "evening";
+                String seats = Arrays.toString(lastBookingSeats[i]).replaceAll("\\[|\\]", "").replace(", ", ",");
+                System.out.println(String.format("%-10s%-10s%-15s%s", session, lastBookingIDs[i], seats, formattedDate));
             }
         } else {
             System.out.println("=========================================");
